@@ -14,7 +14,7 @@ export default class UserService {
 			}    
 			return await UserRepository.create(payload);
 		} catch (error: any) {
-			logger.error('SERVICE LAYER:CREATE USER API:', error);
+			logger.error('SERVICE LAYER:', error);
 			throw new ApiError(HTTP_CODES.INTERNAL_SERVER_ERROR, error.message, false, error.stack);
 		}
 	}

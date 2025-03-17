@@ -22,7 +22,7 @@ export class UserRepository {
 	}
 
 	// Query to get user by email
-	static async findUserByEmail(email: string) {
+	static async findUserByEmail(email: string):Promise<UserAttributes | null> {
 		return await UserModel.findOne({
 			where: { email },
 			include: [{ model: RoleModel, as: 'roleData' }],
@@ -30,7 +30,7 @@ export class UserRepository {
 	}
 
 	// Query to get user by primary key
-	static async findUserByPK(id: string) {
+	static async findUserByPK(id: string):Promise<UserAttributes | null> {
 		return await UserModel.findByPk(id);
 	}
 

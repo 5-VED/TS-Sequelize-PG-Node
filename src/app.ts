@@ -18,6 +18,7 @@ import { config } from './Config/config';
 import {connection} from './Database/PostgresConnection';
 import moment from 'moment';
 import cookieParser from 'cookie-parser';
+import client from './Database/RedisConnection';
 
 
 const FILE_PATH =  '';
@@ -31,7 +32,7 @@ export default class App extends http.Server {
 
     constructor() {
         super();
-        // if (config.server.activateNewRelic && config.env !== 'local' && process.env.CONF_ENV !== 'test') {
+        // if (config.server.activateNewRelic && config.env !== 'local' &&  .CONF_ENV !== 'test') {
         //     try {
         //         require('newrelic');
         //         logger.info('Newrelic enabled');
@@ -48,7 +49,7 @@ export default class App extends http.Server {
         // await Database.open();
         this.initializeMiddlewares();
         this.initializeErrorHandling();
-        this.initializeRoutes(new IndexRoute(this.app));
+        this.initializeRoutes(new IndexRoute(this.app));        
     }
 
     public async start() {
@@ -57,6 +58,7 @@ export default class App extends http.Server {
             logger.info(`NODE version ${process.version}`);
             logger.info(`🚀 API (${this.env}) listening on the port ${this.port}`);
             logger.info(`==========================================`);
+            // connection.authenticate();
             setInterval(() => {
                 logger.info(`----------------MEMORY_USAGE----------------`);
                 const used = process.memoryUsage();

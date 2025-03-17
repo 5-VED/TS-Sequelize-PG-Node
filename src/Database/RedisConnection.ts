@@ -25,20 +25,20 @@ const redisConfig = {
 } as any;
 
 // Create Redis client
-const redisClient = new Redis(redisConfig);
+const client = new Redis(redisConfig);
 
 // Redis Event Listeners
-redisClient.on('connect', () => logger.info('🔌 Connected to Redis'));
-redisClient.on('ready', () => logger.info('✅ Redis is ready'));
-redisClient.on('error', (err) => logger.error('❌ Redis error:', err));
-redisClient.on('reconnecting', () => logger.info('♻️ Reconnecting to Redis...'));
-redisClient.on('end', () => logger.info('🔴 Redis connection closed'));
+client.on('connect', () => logger.info('🔌 Connected to Redis'));
+client.on('ready', () => logger.info('✅ Redis is ready'));
+client.on('error', (err) => logger.error('❌ Redis error:', err));
+client.on('reconnecting', () => logger.info('♻️ Reconnecting to Redis...'));
+client.on('end', () => logger.info('🔴 Redis connection closed'));
 
 // Graceful Shutdown
 process.on('SIGINT', async () => {
-    await redisClient.quit();
+    await client.quit();
     logger.info('👋 Redis connection closed. Exiting...');
     process.exit(0);
 });
 
-export default redisClient;
+export default client;

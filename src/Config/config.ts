@@ -29,7 +29,7 @@ export const config	 = {
 		password: parsedEnv.DB_PASSWORD ,
 	},
 	server: {
-		memoryUsageTimeOut: (process.env.MEMORY_USAGE_TIMEOUT) || 300000,
+		memoryUsageTimeOut: (parsedEnv.MEMORY_USAGE_TIMEOUT),
 		activateNewRelic: true	
 	},
 	jwt: {
