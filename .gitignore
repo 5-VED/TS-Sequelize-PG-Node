@@ -1,0 +1,10 @@
+node_modules
+dist
+
+# Logs
+logs
+
+# Env File
+.env
+
+.early.coverage
