@@ -46,19 +46,23 @@ export default class App extends http.Server {
     }
 
     public async initialize(): Promise<void> {
-        // await Database.open();
+        await this.connect();
         this.initializeMiddlewares();
-        this.initializeErrorHandling();
         this.initializeRoutes(new IndexRoute(this.app));        
+        this.initializeErrorHandling();
     }
 
-    public async start() {
+    public async connect(): Promise<void> {
+        await connection();
+        // await client.connect();
+    }
+
+    public async start(): Promise<void> {  
         this.server = this.app.listen(this.port, () => {
             logger.info(`==========================================`);
             logger.info(`NODE version ${process.version}`);
             logger.info(`🚀 API (${this.env}) listening on the port ${this.port}`);
-            logger.info(`==========================================`);
-            // connection.authenticate();
+            logger.info(`==========================================`);            
             setInterval(() => {
                 logger.info(`----------------MEMORY_USAGE----------------`);
                 const used = process.memoryUsage();
@@ -66,7 +70,7 @@ export default class App extends http.Server {
                     const memoryKey = key as keyof typeof used;
                     logger.info(`${memoryKey} ${Math.round((used[memoryKey] / 1024 / 1024) * 100) / 100} MB`);
                   }
-                logger.info(`reeMemory ${Math.round((freemem() / 1024 / 1024) * 100) / 100} MB`);
+                logger.info(`freeMemory ${Math.round((freemem() / 1024 / 1024) * 100) / 100} MB`);
             }, 300000);
             // this.initializeApiDocs(this.app);
         });
@@ -166,6 +170,7 @@ export default class App extends http.Server {
     // }
 
     private initializeErrorHandling() {
+        console.log('=======================');
         this.app.use(errorHandler);
     }
 }

@@ -9,7 +9,7 @@ export default class UserController {
 	public static async signup(req: Request, res: Response, next: NextFunction): Promise<void> {
 		try {
 			const response = await UserService.create(req.body);
-
+			console.log(req.body)
 			return sendResponse(res, response, message.USER_CREATED_SUCCESSFULLY, true, HTTP_CODES.OK)
 		} catch (error) {
 			logger.error("CONTROLLER LAYER:" + error)

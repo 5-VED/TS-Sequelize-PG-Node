@@ -66,7 +66,7 @@ export class UserModel extends BaseModel<UserCreatinAttributes> {
 
 	@ForeignKey(() => RoleModel)
 	@Column({
-		type: DataType.STRING,
+		type: DataType.UUID,
 		allowNull: false,
 	})
 	role!: string;

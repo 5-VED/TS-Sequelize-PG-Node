@@ -26,6 +26,8 @@ const redisConfig = {
 
 // Create Redis client
 const client = new Redis(redisConfig);
+// const client = new Redis({ ...redisConfig, lazyConnect: true });
+
 
 // Redis Event Listeners
 client.on('connect', () => logger.info('🔌 Connected to Redis'));

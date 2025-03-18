@@ -21,7 +21,7 @@ const getLogDirectory = (): string => {
 };
 
 // Function to generate a log file name inside the date-wise directory
-const getLogFileName = (level: string) => {
+const getLogFileName = (level: string): string => {
 	return path.join(getLogDirectory(), `${level}.log`);
 };
 

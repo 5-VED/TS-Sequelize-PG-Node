@@ -2,7 +2,7 @@ import { HTTP_CODES } from "../Common/Constants/enums";
 import message from "../Common/Constants/Messages";
 import ApiError from "../Common/ErrorResponse";
 import logger from "../Config/Logger";
-import { UserAttributes, UserCreatinAttributes } from "../Models";
+import { UserAttributes, UserCreatinAttributes } from "../Models/User.model";
 import { UserRepository } from "../Repository/User.repository";
 
 export default class UserService {

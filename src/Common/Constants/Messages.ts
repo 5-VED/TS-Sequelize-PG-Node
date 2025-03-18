@@ -8,6 +8,7 @@ const message = {
 	ERROR_CREATING_ROLE: 'Error creating role.',
 	ERROR_UPLOADING_FILE: 'Error while uploading file.',
 	DATABASE_CONNECTED: 'Database connection has been established successfully.',
+	INVALID_PAYLOAD: 'Invalid req data from req.',
 
 	SUCCESS: 'Success.',
 	FAILED: 'Failed.',

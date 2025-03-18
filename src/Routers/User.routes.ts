@@ -2,10 +2,12 @@ import { Router } from 'express'
 import UserController from '../Controllers/User.controller'
 import { auth } from "../Middlewares/Auth.middleware"
 import { ROLE } from '../Common/Constants/enums'
-const path = '/user';
 const UserRoutes = Router({ mergeParams: true });
+import ValidationMiddleware from '../Middlewares/Validation.middleware';
+import { UserDto } from '../Validators/User.dto';
+const path = '/user';
 
-UserRoutes.post(`${path}/signup`, auth({ isTokenRequired: false, usersAllowed: [ROLE.USER] }), UserController.signup)
+UserRoutes.post(`${path}/signup`, ValidationMiddleware(UserDto, 'body'), UserController.signup)
 
 UserRoutes.post(`${path}/login`, auth({ isTokenRequired: false, usersAllowed: [ROLE.USER] }), UserController.signup)
 

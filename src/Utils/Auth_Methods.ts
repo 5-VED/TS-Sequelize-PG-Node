@@ -61,7 +61,7 @@ export const comparePassword = async ({ password, hashedPassword }: { password: 
     return isMatch;
 };
 
-export const decodeToken = async ({ token }: { token: string }) => {
+export const decodeToken = async ({ token }: { token: string }):Promise<string | JWT.JwtPayload> => {
     if (!process.env.JWT_SECRET_KEY) throw new Error('JWT_SECRET_KEY environment variable is not defined');
 
     const decoded = await JWT.verify(token, process.env.JWT_SECRET_KEY);
@@ -84,12 +84,11 @@ export const hashPassword = async ({ password }: { password: string }): Promise<
     return hashedPassword;
 };
 
-export async function sendResponse(res: Response, data: any, message: string | undefined, success: boolean, code = 200) {
+export async function sendResponse(res: Response, data: any, message: string | undefined, success: boolean, code = 200):Promise<void> {
     const responseObj: IResponse = {
         data: data,
         message: message ? message : 'undefined',
         success: success,
     };
-
     res.status(code).json(responseObj);
 }
