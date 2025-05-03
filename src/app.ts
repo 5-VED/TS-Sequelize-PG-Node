@@ -1,176 +1,196 @@
-import express, { NextFunction, Request, Response } from 'express';
+import express, { NextFunction, Request, Response, ErrorRequestHandler } from 'express';
 import helmet from "helmet";
 import hpp from "hpp";
-import errorHandler from "./Middlewares/ErrorHandler";
-import {IndexRoute} from './Routers'
-import * as http from 'http';
+import cors from "cors";
+import cookieParser from 'cookie-parser';
+import moment from 'moment';
 import { readFileSync, writeFileSync } from 'fs';
 import { freemem } from 'os';
+import swaggerUi from 'swagger-ui-express';
+import swaggerJsdoc from 'swagger-jsdoc';
+import { config } from './Config/config';
+import logger from './Config/Logger';
+import { connection } from './Database/PostgresConnection';
+import errorHandler from "./Middlewares/ErrorHandler";
+import { IndexRoute } from './Routers';
+import { IRoutes } from './Common/interfaces/IRoutes';
+import { ILooseObject } from './Common/interfaces/ILooseObject';
 import { sendResponse } from './Utils/Auth_Methods';
 import { HTTP_CODES } from './Common/Constants/enums';
 import message from './Common/Constants/Messages';
-// const FILE_PATH = `${config.server.root}/statics/stats.json` || '';
-import logger from './Config/Logger';
-import { IRoutes } from './Common/interfaces/IRoutes';
-import { ILooseObject } from './Common/interfaces/ILooseObject';
-import cors from "cors"
-import { config } from './Config/config';
-import {connection} from './Database/PostgresConnection';
-import moment from 'moment';
-import cookieParser from 'cookie-parser';
-import client from './Database/RedisConnection';
+import ApiError from './Common/ErrorResponse';
+import swaggerOptions from './Config/swagger.config';
 
+const FILE_PATH = '';
 
-const FILE_PATH =  '';
-
-
-export default class App extends http.Server {
+export default class App {
     public app: express.Application;
     public port: string | number;
     public env: string;
-    private server?: http.Server;
+    private server?: any;
 
     constructor() {
-        super();
-        // if (config.server.activateNewRelic && config.env !== 'local' &&  .CONF_ENV !== 'test') {
-        //     try {
-        //         require('newrelic');
-        //         logger.info('Newrelic enabled');
-        //     } catch (error) {
-        //         logger.info('newrelic not found');
-        //     }
-        // }
         this.app = express();
         this.port = config.port;
         this.env = config.env;
+        this.initializeMiddlewares();
+        this.initializeSwagger();
     }
 
     public async initialize(): Promise<void> {
         await this.connect();
-        this.initializeMiddlewares();
-        this.initializeRoutes(new IndexRoute(this.app));        
+        this.initializeRoutes(new IndexRoute(this.app));
         this.initializeErrorHandling();
     }
 
     public async connect(): Promise<void> {
-        await connection();
-        // await client.connect();
+        try {
+            await connection();
+            logger.info('Database connected successfully');
+        } catch (error) {
+            logger.error('Database connection failed:', error);
+            process.exit(1);
+        }
     }
 
-    public async start(): Promise<void> {  
+    public async start(): Promise<void> {
         this.server = this.app.listen(this.port, () => {
-            logger.info(`==========================================`);
-            logger.info(`NODE version ${process.version}`);
-            logger.info(`🚀 API (${this.env}) listening on the port ${this.port}`);
-            logger.info(`==========================================`);            
+            logger.info('='.repeat(50));
+            logger.info(`🚀 Server running in ${this.env} mode on port ${this.port}`);
+            logger.info(`👉 http://localhost:${this.port}`);
+            logger.info(`📝 API Documentation: http://localhost:${this.port}/api-docs`);
+            logger.info(`🔰 Node version: ${process.version}`);
+            logger.info('='.repeat(50));
+
+            // Monitor memory usage every 5 minutes
             setInterval(() => {
-                logger.info(`----------------MEMORY_USAGE----------------`);
                 const used = process.memoryUsage();
+                logger.info('Memory Usage Stats:');
                 for (const key in used) {
                     const memoryKey = key as keyof typeof used;
-                    logger.info(`${memoryKey} ${Math.round((used[memoryKey] / 1024 / 1024) * 100) / 100} MB`);
-                  }
-                logger.info(`freeMemory ${Math.round((freemem() / 1024 / 1024) * 100) / 100} MB`);
+                    logger.info(`${memoryKey}: ${Math.round((used[memoryKey] / 1024 / 1024) * 100) / 100} MB`);
+                }
+                logger.info(`Free Memory: ${Math.round((freemem() / 1024 / 1024) * 100) / 100} MB`);
             }, 300000);
-            // this.initializeApiDocs(this.app);
         });
+    }
+
+    private initializeMiddlewares() {
+        // Security middlewares
+        this.app.use(helmet({
+            contentSecurityPolicy: this.env === 'production',
+            crossOriginEmbedderPolicy: this.env === 'production',
+        }));
+        this.app.use(hpp());
+        this.app.use(cors({
+            origin: this.env === 'production' ? process.env.CORS_ORIGIN : '*',
+            credentials: true,
+            methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+        }));
+
+        // Request parsing
+        this.app.use(express.json({ limit: '10mb' }));
+        this.app.use(express.urlencoded({ extended: true, limit: '10mb' }));
+        this.app.use(cookieParser());
+
+        // Request statistics
+        if (FILE_PATH) {
+            this.app.use((req: Request, res: Response, next: NextFunction) => {
+                res.on('finish', () => {
+                    const stats: any = this.readStats();
+                    const event = `${moment().format('YYYY-MM-DD')} : ${req.method} ${this.getRoute(req)} ${res.statusCode}`;
+                    stats[event] = stats[event] ? stats[event] + 1 : 1;
+                    this.dumpStats(stats);
+                });
+                next();
+            });
+        }
+    }
+
+    private initializeSwagger() {
+        const specs = swaggerJsdoc(swaggerOptions);
+        this.app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(specs));
+    }
+
+    public initializeRoutes(routes: IRoutes) {
+        // JWT error handler
+        this.app.use((err: ILooseObject, req: Request, res: Response, next: NextFunction) => {
+            if (err.name === 'UnauthorizedError') {
+                logger.error('JWT validation failed:', err);
+                return sendResponse(res, {}, message.UNAUTHORIZED, false, HTTP_CODES.UNAUTHORIZED);
+            }
+            next(err);
+        });
+
+        // API routes
+        this.app.use('/api/v1', routes.router);
+
+        // Health check endpoint
+        this.app.get('/health', (req, res) => {
+            res.status(200).json({
+                success: true,
+                timestamp: new Date(),
+                uptime: process.uptime(),
+                memory: process.memoryUsage(),
+                status: 'OK'
+            });
+        });
+
+        // Stats endpoint (if enabled)
+        if (FILE_PATH) {
+            this.app.get('/stats', (req, res) => {
+                res.json(this.readStats());
+            });
+        }
+    }
+
+    private initializeErrorHandling() {
+        // Handle 404 errors
+        this.app.use((req: Request, res: Response, next: NextFunction) => {
+            next(ApiError.notFound(`Endpoint ${req.method} ${req.path} not found`));
+        });
+
+        // Global error handler
+        this.app.use(errorHandler as ErrorRequestHandler);
     }
 
     public async disconnect(): Promise<void> {
         if (this.server) {
-            await new Promise((resolve, reject) => {
-                this.server?.close(err => {
+            await new Promise<void>((resolve, reject) => {
+                this.server.close((err?: Error) => {
                     if (err) {
-                        return reject(err);
+                        reject(err);
+                        return;
                     }
-                    resolve(true);
+                    resolve();
                 });
             });
+            logger.info('Server stopped gracefully');
         }
     }
 
-    public getServer() {
-        return this.app;
-    }
-
-    private initializeMiddlewares() {
-        this.app.use(cors());
-        this.app.use(hpp());
-        this.app.use(helmet());
-        // this.app.use(compression());
-        this.app.use(express.json({ limit: '50mb' }));
-        this.app.use(express.urlencoded({ limit: '50mb', extended: true }));
-        this.app.use(cookieParser());
-
-        this.app.use((req: Request, res: Response, next: NextFunction) => {
-            res.on('finish', () => {
-                const stats: any = this.readStats();
-                const event = `${moment().format('YYYY-MM-DD')} : ${req.method} ${this.getRoute(req)} ${res.statusCode}`;
-                stats[event] = stats[event] ? stats[event] + 1 : 1;
-                this.dumpStats(stats);
-            });
-            next();
-        });
-    }
-
-    public initializeRoutes(routes: IRoutes) {
-        this.app.use('/', routes.router);
-
-        this.app.use(function (err: ILooseObject, req: Request, res: Response, next: NextFunction) {
-            if (err.name === 'UnauthorizedError') {
-                logger.error('invalid token...');
-                return sendResponse(res, {}, message.UNAUTHORIZED, false, HTTP_CODES.UNAUTHORIZED);
-            }
-            next();
-        });
-
-        this.app.get('/stats/', (req, res) => {
-            res.json(this.readStats());
-        });
-
-        this.app.get('/health', (req, res) => {
-            const data = {
-                uptime: process.uptime(),
-                message: 'Ok',
-                date: new Date(),
-            };
-
-            res.status(200).send(data);
-        });
-    }
-
-    getRoute = (req: Request) => {
-        const route = req.route ? req.route.path : ''; // check if the handler exist
-        const baseUrl = req.baseUrl ? req.baseUrl : ''; // adding the base url if the handler is child of other handler
+    private getRoute = (req: Request): string => {
+        const route = req.route ? req.route.path : '';
+        const baseUrl = req.baseUrl ? req.baseUrl : '';
         return route ? `${baseUrl === '/' ? '' : baseUrl}${route}` : 'unknown route';
     };
-    // read json object from file
-    readStats = () => {
-        let result = {};
+
+    private readStats = (): object => {
+        if (!FILE_PATH) return {};
         try {
-            result = JSON.parse(readFileSync(FILE_PATH, 'utf8'));
+            return JSON.parse(readFileSync(FILE_PATH, 'utf8'));
         } catch (err) {
-            logger.error(err);
+            logger.error('Error reading stats file:', err);
+            return {};
         }
-        return result;
     };
 
-    // dump json object to file
-    dumpStats = (stats: any) => {
+    private dumpStats = (stats: any): void => {
+        if (!FILE_PATH) return;
         try {
             writeFileSync(FILE_PATH, JSON.stringify(stats), { flag: 'w+' });
         } catch (err) {
-            logger.error(err);
+            logger.error('Error writing stats file:', err);
         }
     };
-
-    // private async initializeApiDocs(app: express.Application) {
-    //     const swagger = await import('./config/swagger');
-    //     swagger.apiDoc(app);
-    // }
-
-    private initializeErrorHandling() {
-        console.log('=======================');
-        this.app.use(errorHandler);
-    }
 }
