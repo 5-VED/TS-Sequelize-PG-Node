@@ -2,19 +2,14 @@ import { Router } from 'express'
 import UserController from '../Controllers/User.controller'
 import { auth } from "../Middlewares/Auth.middleware"
 import { ROLE } from '../Common/Constants/enums'
-const UserRoutes = Router({ mergeParams: true });
 import ValidationMiddleware from '../Middlewares/Validation.middleware';
 import { UserDto } from '../Validators/User.dto';
-const path = '/user';
+import { LoginDto } from '../Validators/LoginDto';
 
-UserRoutes.post(`${path}/signup`, ValidationMiddleware(UserDto, 'body'), UserController.signup)
+const router = Router({ mergeParams: true });
 
-UserRoutes.post(`${path}/login`, auth({ isTokenRequired: false, usersAllowed: [ROLE.USER] }), UserController.signup)
 
-UserRoutes.put(`${path}/delete/:id`, auth({ isTokenRequired: false, usersAllowed: [ROLE.USER] }), UserController.signup)
+router.post('/signup', ValidationMiddleware(UserDto, 'body'), UserController.signup);
+router.post('/login', ValidationMiddleware(LoginDto, 'body'), UserController.login);
 
-UserRoutes.put(`${path}/update/:id`, auth({ isTokenRequired: false, usersAllowed: [ROLE.USER] }), UserController.signup)
-
-UserRoutes.get(`${path}/get-users`, auth({ isTokenRequired: false, usersAllowed: [ROLE.USER] }), UserController.signup)
-
-export default UserRoutes
+export default router;

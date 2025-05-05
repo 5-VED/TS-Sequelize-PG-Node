@@ -3,7 +3,7 @@ import { config } from '../Config/config';
 import logger from '../Config/Logger';
 import { RoleModel, UserModel } from '../Models';
 
-const sequelizeConfig = new Sequelize(
+const sequelize = new Sequelize(
 	config.database.name as string,
 	config.database.username as string,
 	config.database.password as string,
@@ -19,10 +19,12 @@ const sequelizeConfig = new Sequelize(
 
 export const connection = async () => {
 	try {
-		await sequelizeConfig.authenticate();
+		await sequelize.authenticate();
 		logger.info('Connection has been established successfully.');
 	} catch (error) {
 		logger.error('Unable to connect to database:-->', error);
 		process.exit(1);
 	}
 };
+
+export default sequelize;

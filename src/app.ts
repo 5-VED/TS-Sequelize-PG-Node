@@ -6,8 +6,6 @@ import cookieParser from 'cookie-parser';
 import moment from 'moment';
 import { readFileSync, writeFileSync } from 'fs';
 import { freemem } from 'os';
-import swaggerUi from 'swagger-ui-express';
-import swaggerJsdoc from 'swagger-jsdoc';
 import { config } from './Config/config';
 import logger from './Config/Logger';
 import { connection } from './Database/PostgresConnection';
@@ -19,7 +17,6 @@ import { sendResponse } from './Utils/Auth_Methods';
 import { HTTP_CODES } from './Common/Constants/enums';
 import message from './Common/Constants/Messages';
 import ApiError from './Common/ErrorResponse';
-import swaggerOptions from './Config/swagger.config';
 
 const FILE_PATH = '';
 
@@ -34,7 +31,6 @@ export default class App {
         this.port = config.port;
         this.env = config.env;
         this.initializeMiddlewares();
-        this.initializeSwagger();
     }
 
     public async initialize(): Promise<void> {
@@ -105,11 +101,6 @@ export default class App {
                 next();
             });
         }
-    }
-
-    private initializeSwagger() {
-        const specs = swaggerJsdoc(swaggerOptions);
-        this.app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(specs));
     }
 
     public initializeRoutes(routes: IRoutes) {

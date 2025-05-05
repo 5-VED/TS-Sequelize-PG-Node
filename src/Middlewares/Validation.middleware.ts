@@ -30,12 +30,12 @@ const ValidationMiddleware = (
                 });                
                 if (msg) {
                     logger.error(`[${req.method}] ${req.path} >> StatusCode:: ${HTTP_CODES.BAD_REQUEST}, Message:: ${msg}`);
-                    next(new ApiError(HTTP_CODES.BAD_REQUEST, msg));
+                    next(new ApiError( msg,HTTP_CODES.BAD_REQUEST));
                 } else {
                     msg = `${message.INVALID_PAYLOAD}` + `${value}`;
                     const errorStack = errorExtractor.extractDeepestErrors(errors);
                     logger.error(`[${req.method}] ${req.path} >> StatusCode:: ${HTTP_CODES.BAD_REQUEST}, Message:: ${msg}, Error:: ${errorStack}`);
-                    next(new ApiError(HTTP_CODES.BAD_REQUEST, msg, false, errorStack));
+                    next(new ApiError(msg,HTTP_CODES.BAD_REQUEST));
                 }
             } else {
                 next();

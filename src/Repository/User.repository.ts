@@ -1,10 +1,11 @@
 import { RoleModel } from '../Models/Role.model';
 import { UserAttributes, UserCreatinAttributes, UserModel } from '../Models';
+import { Transaction } from 'sequelize';
 
 export class UserRepository {
 	// Query to create user
-	static async create(user: UserCreatinAttributes): Promise<UserAttributes> {
-		return await UserModel.create(user);
+	static async create(user: UserCreatinAttributes, transaction?: Transaction): Promise<UserAttributes> {
+		return await UserModel.create(user, { transaction });
 	}
 
 	// Query to get all the users with pagination
@@ -22,15 +23,16 @@ export class UserRepository {
 	}
 
 	// Query to get user by email
-	static async findUserByEmail(email: string):Promise<UserAttributes | null> {
+	static async findUserByEmail(email: string, transaction?: Transaction): Promise<UserAttributes | null> {
 		return await UserModel.findOne({
 			where: { email },
 			include: [{ model: RoleModel, as: 'roleData' }],
+			transaction
 		});
 	}
 
 	// Query to get user by primary key
-	static async findUserByPK(id: string):Promise<UserAttributes | null> {
+	static async findUserByPK(id: string): Promise<UserAttributes | null> {
 		return await UserModel.findByPk(id);
 	}
 

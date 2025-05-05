@@ -5,7 +5,6 @@ import { RoleModel } from '../Models';
 import jwt from 'jsonwebtoken';
 import message from '../Common/Constants/Messages';
 import { ROLE } from '../Common/Constants/enums';
-// import { APIResponse } from 'Lib/ApiResponse';
 import { HTTP_CODES } from '../Common/Constants/enums';
 import { sendResponse } from '../Utils/Auth_Methods';
 export interface AuthOptions {
@@ -26,8 +25,7 @@ export const auth = ({ isTokenRequired = true, usersAllowed = [] }: AuthOptions 
 		try {
 			let token = (req.header('x-auth-token') || req.header('Authorization'))?.replace(/Bearer +/g, '') as string;
 
-			if (isTokenRequired && !token) {
-				// APIResponse.sendError(res, HTTP_CODES.BAD_REQUEST, message.TOKEN_REQUIRED, isTokenRequired);
+			if (isTokenRequired && !token) {				
 				return sendResponse(res, isTokenRequired, message.TOKEN_REQUIRED, false, HTTP_CODES.BAD_REQUEST)
 			}
 
@@ -36,8 +34,7 @@ export const auth = ({ isTokenRequired = true, usersAllowed = [] }: AuthOptions 
 			let decoded: any = jwt.decode(token);
 			logger.info(`[DECODED] [CONTENT: ${JSON.stringify(decoded)}]`);
 
-			if (!decoded?.id) {
-				// APIResponse.sendError(res, HTTP_CODES.UNAUTHORIZED, message.INVALID_TOKEN, decoded);
+			if (!decoded?.id) {				
 				return sendResponse(res, decoded, message.INVALID_TOKEN, false, HTTP_CODES.UNAUTHORIZED)
 			}
 
@@ -51,8 +48,7 @@ export const auth = ({ isTokenRequired = true, usersAllowed = [] }: AuthOptions 
 				nest: true,
 			});
 
-			if (!user) {
-				// APIResponse.sendError(res, HTTP_CODES.UNAUTHORIZED, message.INVALID_TOKEN, user);
+			if (!user) {				
 				return sendResponse(res, user, message.INVALID_TOKEN, false, HTTP_CODES.UNAUTHORIZED)
 			}
 
@@ -73,8 +69,7 @@ export const auth = ({ isTokenRequired = true, usersAllowed = [] }: AuthOptions 
 			// APIResponse.sendError(res, HTTP_CODES.UNAUTHORIZED, message.UNAUTHORIZED, decoded);
 			return sendResponse(res, decoded, message.UNAUTHORIZED, false, HTTP_CODES.UNAUTHORIZED)
 		} catch (error: any) {
-			logger.error(`[AUTH ERROR]: ${error.message}`);
-			// APIResponse.sendError(res, HTTP_CODES.INTERNAL_SERVER_ERROR, error.message, error.stack);
+			logger.error(`[AUTH ERROR]: ${error.message}`);			
 			return sendResponse(res, error.stack, error.message, false, HTTP_CODES.INTERNAL_SERVER_ERROR)
 		}
 	};
