@@ -138,7 +138,8 @@ export default class App {
     private initializeErrorHandling() {
         // Handle 404 errors
         this.app.use((req: Request, res: Response, next: NextFunction) => {
-            next(ApiError.notFound(`Endpoint ${req.method} ${req.path} not found`));
+            const error = new ApiError(HTTP_CODES.NOT_FOUND, `Route ${req.method} ${req.originalUrl} not found`);
+            next(error);
         });
 
         // Global error handler
