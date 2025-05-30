@@ -1,4 +1,3 @@
-
 import { IRoutes } from '@/Common/interfaces/IRoutes';
 // import { RoutesConfig } from '@common/RoutesConfig';
 
@@ -8,16 +7,15 @@ import { Application, Router } from 'express';
 import UserRoutes from './User.routes';
 
 export class IndexRoute implements IRoutes {
-    public router = Router({ mergeParams: true });
-    public path = '/api/v1'; 
+    public router = Router({ mergeParams: true });    
     constructor(app: Application) {
         this.initializeRoutes(app);
     }
 
     private initializeRoutes(app: Application) {
-        
-        this.router.use(this.path, UserRoutes);
 
+        this.router.use('/user',UserRoutes); 
+        
         logger.info('Routes initiated...');
 
         // this.routerArray.forEach((route: any) => {

@@ -10,7 +10,7 @@ const sequelize = new Sequelize(
 	{
 		dialect: 'postgres',
 		host: config.database.host as string,
-		port: config.database.port as number,
+		port: config.database.port as number,		
 		logging: config.isDevelopment ? true : false,
 		// models: [__dirname + '../Models'],
 		models: [UserModel, RoleModel]

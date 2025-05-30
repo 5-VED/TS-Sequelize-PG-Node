@@ -6,8 +6,7 @@ import { sendResponse } from '../Utils/Auth_Methods';
 
 
 const errorHandler = (error: Error, req: Request, res: Response, next: NextFunction) => {
-    try {
-        console.log('==========ffffff=============');
+    try {        
         const commonErrorMessage = 'Something went wrong';
         if (error instanceof HttpException) {
             const status = error.status || HTTP_CODES.INTERNAL_SERVER_ERROR;

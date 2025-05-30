@@ -22,13 +22,13 @@ const FILE_PATH = '';
 
 export default class App {
     public app: express.Application;
-    public port: string | number;
+    public port: number;
     public env: string;
     private server?: any;
 
     constructor() {
         this.app = express();
-        this.port = config.port;
+        this.port = Number(config.port);
         this.env = config.env;
         this.initializeMiddlewares();
     }

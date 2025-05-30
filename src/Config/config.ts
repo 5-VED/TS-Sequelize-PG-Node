@@ -20,13 +20,13 @@ export const config	 = {
 	isDevelopment: env === 'development',
 	isProduction: env === 'production',
 	isTest: env === 'test',
-	port: parsedEnv.PORT as number,
+	port: parsedEnv.PORT,
 	database: {
-		host: parsedEnv.DB_HOST, 
+		host: parsedEnv.DB_HOST,  
 		port: parsedEnv.DB_PORT,
-		name: parsedEnv.DB_NAME ,
-		username: parsedEnv.DB_USER ,
-		password: parsedEnv.DB_PASSWORD ,
+		name: parsedEnv.DB_NAME,
+		username: parsedEnv.DB_USER,
+		password: parsedEnv.DB_PASSWORD,
 	},
 	server: {
 		memoryUsageTimeOut: (parsedEnv.MEMORY_USAGE_TIMEOUT),

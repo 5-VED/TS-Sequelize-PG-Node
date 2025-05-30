@@ -27,15 +27,15 @@ const ValidationMiddleware = (
                         msg = Object.values(error.constraints).join(', ');
                         logger.error(msg);
                     }
-                });                
+                });
                 if (msg) {
                     logger.error(`[${req.method}] ${req.path} >> StatusCode:: ${HTTP_CODES.BAD_REQUEST}, Message:: ${msg}`);
-                    next(new ApiError( msg,HTTP_CODES.BAD_REQUEST));
+                    next(new ApiError(HTTP_CODES.BAD_REQUEST, msg, false));
                 } else {
                     msg = `${message.INVALID_PAYLOAD}` + `${value}`;
                     const errorStack = errorExtractor.extractDeepestErrors(errors);
                     logger.error(`[${req.method}] ${req.path} >> StatusCode:: ${HTTP_CODES.BAD_REQUEST}, Message:: ${msg}, Error:: ${errorStack}`);
-                    next(new ApiError(msg,HTTP_CODES.BAD_REQUEST));
+                    next(new ApiError(HTTP_CODES.BAD_REQUEST, msg, false));
                 }
             } else {
                 next();
